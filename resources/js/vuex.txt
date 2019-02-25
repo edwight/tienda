@@ -1,0 +1,57 @@
+getters:
+    loggedIn(state):{
+        return state.token != null
+
+header.vue 
+    computed:
+        loggedIn(){
+            return this.$store.getters.loggedIn
+
+v-if="!loggedIn"<router-link :to="{name:'login'}">
+
+actions:{
+    destroyToken(context){
+        axios.defaults.headers.common['Authorization'] = 'Bearer '+ context.state.token
+        if(context.geeters.loggeIn){
+            return new Promise((resolve,reject)=>{
+                axios.post('/logout')
+                then(response=>{
+                    localStorage.removeItem('access_token')
+                    context.commit('destroyToken')
+                    resolve(response)
+                })
+                .catch(error=>{
+                    localStorage.removeItem('access_token')
+                    context.commit('destroyToken')
+                    reject(error)
+                })
+        })
+    },
+
+mutation:{
+    DESTROY_TOKEN(state){
+        state.token = null
+    }
+}
+
+router.js
+router.beforeEach(to,from,next)=>{
+    if(to.matched.some(record=> record.meta.requiresAuth)){
+        if(!store.getters.loggedIn){
+            next({name:'login'})
+        }else{
+        next()
+        }
+    }
+    else if(to.matched.some(record=>record.meta.requiresVisitor)){
+        if(store.getters.loggedIn){
+            next({name:'todo'})
+        }
+        else{
+            next()
+        }      
+    }
+    else{
+        next()
+    }
+}
